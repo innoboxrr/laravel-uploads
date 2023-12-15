@@ -13,7 +13,7 @@ class UploadController extends Controller
     
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
+        $this->middleware('auth:sanctum')->except('display');
     }
 
     public function uploadFile(UploadRequest $request)
@@ -21,9 +21,9 @@ class UploadController extends Controller
         return $request->handle();   
     }
 
-    public function display(DisplayRequest $request, $user_id, $filename)
+    public function display(DisplayRequest $request, $upload_id, $filename)
     {
-        return $request->handle($user_id, $filename);   
+        return $request->handle($upload_id, $filename);   
     }
 
     public function delete(DeleteRequest $request)

@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('file', 'UploadController@uploadFile')
 	->name('file');
 
-Route::get('{upload_uuid}/display/{filename}', 'UploadController@display')
+Route::get('{upload_uuid}/display/{filename?}', 'UploadController@display')
 	->name('display');
 
 Route::delete('delete', 'UploadController@delete')

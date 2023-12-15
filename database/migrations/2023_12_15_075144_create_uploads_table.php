@@ -22,9 +22,9 @@ return new class extends Migration
             $table->string('size'); // in bytes
             $table->string('path');
             $table->string('disk');
-            $table->string('visibility');
-            $table->string('uploadable_type');
-            $table->string('uploadable_id');
+            $table->string('visibility')->default('public');
+            $table->string('uploadable_type')->nullable();
+            $table->string('uploadable_id')->nullable();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();

@@ -9,8 +9,10 @@ trait UploadStorage
 
     public function upload($request) 
     {
+        
+        $upload = $this->create($request->only($this->creatable));
 
-        $request->file('file')->storeAs($this->getUploadPath(), $this->filename);
+        return $upload;
 
     }
 

@@ -7,6 +7,7 @@ use Innoboxrr\LaravelUploads\Http\Resources\Models\UploadResource;
 use Innoboxrr\LaravelUploads\Http\Events\Upload\Events\UpdateEvent;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class DisplayRequest extends FormRequest
 {
@@ -19,9 +20,7 @@ class DisplayRequest extends FormRequest
     public function authorize()
     {
         
-        $upload = Upload::findOrFail($this->upload_id);
-
-        return $this->user()->can('display', $upload);
+        return true;
 
     }
 
@@ -29,7 +28,7 @@ class DisplayRequest extends FormRequest
     {
         return [
             //
-            'upload_id' => 'required|numeric'
+            // 'upload_id' => 'required|numeric'
         ];
     }
 
@@ -52,17 +51,22 @@ class DisplayRequest extends FormRequest
         //
     }
 
-    public function handle()
+    public function handle($upload_id, $filename)
     {
 
-        $upload = Upload::findOrFail($this->upload_id);
+        $upload = Upload::where('uuid', $upload_id)->firstOrFail();
 
         $path = $upload->path;
+
         if (!Storage::disk($upload->disk)->exists($path)) {
             abort(404);
         }
 
-        return Storage::disk($upload->disk)->download($path, $upload->filename);
+        $fileContents = Storage::disk($upload->disk)->get($path);
+        $mimeType = Storage::disk($upload->disk)->mimeType($path);
+
+        return response($fileContents, 200)
+            ->header('Content-Type', $mimeType);
 
     }
 

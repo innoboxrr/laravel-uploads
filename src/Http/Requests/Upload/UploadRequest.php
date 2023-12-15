@@ -12,7 +12,7 @@ class UploadRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        //
+        
     }
 
     public function authorize()
@@ -45,13 +45,18 @@ class UploadRequest extends FormRequest
 
     protected function passedValidation()
     {
+
+        if (!$this->hasFile('file')) {
+            throw new \Exception("No se recibió ningún archivo.");
+        }
+
         $file = $this->file('file');
         
         $filePath = (new UploadService($file))->upload();
 
         $upload = (new Upload);
 
-        $this->merge($upload->buildCreatable($filePath, $file, $this->status));
+        $this->merge($upload->buildCreatable($filePath, $file, $this->visibility ?? 'public', $this->user()->id, config('laravel-uploads.disk', 's3')));
 
     }
 

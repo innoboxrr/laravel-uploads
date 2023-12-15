@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Innoboxrr\Traits\MetaOperations;
 use Innoboxrr\LaravelUploads\Models\Traits\Relations\UploadRelations;
 use Innoboxrr\LaravelUploads\Models\Traits\Storage\UploadStorage;
-use Innoboxrr\LaravelUploads\Models\Traits\Assignments\UploadAssignment;
 use Innoboxrr\LaravelUploads\Models\Traits\Operations\UploadOperations;
 use Innoboxrr\LaravelUploads\Models\Traits\Mutators\UploadMutators;
 
@@ -20,7 +19,6 @@ class Upload extends Model
         MetaOperations,
         UploadRelations,
         UploadStorage,
-        UploadAssignment,
         UploadOperations,
         UploadMutators;
         
@@ -33,6 +31,8 @@ class Upload extends Model
         'path',
         'disk',
         'visibility',
+        'uploadable_type',
+        'uploadable_id',
         'user_id',
     ];
 
@@ -45,6 +45,8 @@ class Upload extends Model
         'path',
         'disk',
         'visibility',
+        'uploadable_type',
+        'uploadable_id',
         'user_id',
     ];
 

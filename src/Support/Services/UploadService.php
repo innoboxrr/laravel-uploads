@@ -26,7 +26,7 @@ class UploadService
 
 	public function __construct($file, $params = [], $validations = [])
 	{
-		$this->disk = Arr::get($params, 'disk', 's3');
+		$this->disk = config('laravel-uploads.disk', 'local');
 
 		$this->file = $file;
 
@@ -56,6 +56,10 @@ class UploadService
 	public function upload()
     {
         try {
+
+            if (!$this->file || !file_exists($this->file->getPathname())) {
+                throw new \Exception("Archivo no válido o no encontrado.");
+            }
 
             $this->validate();
 
