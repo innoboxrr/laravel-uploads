@@ -9,7 +9,7 @@ trait UploadMutators
     {
 
         return route('lu.upload.display', [
-            'upload_id' => $this->uuid,
+            'upload_uuid' => $this->uuid,
             'filename' => $this->filename,
         ]);
 
