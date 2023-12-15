@@ -54,6 +54,10 @@ class Upload extends Model
         'filename',
     ];
 
+    protected $appends = [
+        'url',
+    ];
+
     protected $casts = [];
 
     protected $protected_metas = [];

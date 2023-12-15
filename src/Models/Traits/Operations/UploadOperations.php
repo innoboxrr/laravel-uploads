@@ -4,6 +4,7 @@ namespace Innoboxrr\LaravelUploads\Models\Traits\Operations;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 trait UploadOperations
 {
@@ -26,6 +27,13 @@ trait UploadOperations
             'visibility' => $visibility,
             'user_id' => $userId,
         ];
+    }
+
+    public function getUrl()
+    {
+
+        return Storage::disk($this->disk)->url($this->path);
+
     }
 
 }
