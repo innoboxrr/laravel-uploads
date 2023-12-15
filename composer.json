@@ -12,5 +12,7 @@
             "email": "h.raulvc@gmail.com"
         }
     ],
-    "require": {}
+    "require-dev": {
+        "orchestra/testbench": "^8.17"
+    }
 }
