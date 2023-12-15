@@ -26,6 +26,7 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         'a1105708a18b76903365ca1c4aa61b02' => __DIR__ . '/..' . '/symfony/translation/Resources/functions.php',
         '47e1160838b5e5a10346ac4084b58c23' => __DIR__ . '/..' . '/laravel/prompts/src/helpers.php',
         '35a6ad97d21e794e7e22a17d806652e4' => __DIR__ . '/..' . '/nunomaduro/termwind/src/Functions.php',
+        '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
         '265b4faa2b3a9766332744949e83bf97' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Collections/helpers.php',
         'c7a3c339e7e14b60e06a2d7fcce9476b' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Events/functions.php',
         'f0906e6318348a765ffb6eb24e0d0938' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Foundation/helpers.php',
@@ -36,6 +37,7 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         'c72349b1fe8d0deeedd3a52e8aa814d8' => __DIR__ . '/..' . '/mockery/mockery/library/helpers.php',
         'ce9671a430e4846b44e1c68c7611f9f5' => __DIR__ . '/..' . '/mockery/mockery/library/Mockery.php',
         'ec07570ca5a812141189b1fa81503674' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
+        '64d71f7d0788288b31a7e5b10b5e17f7' => __DIR__ . '/..' . '/innoboxrr/larapack-generator/src/Helpers/app.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -45,6 +47,8 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         ),
         'Z' => 
         array (
+            'Znck\\Eloquent\\' => 14,
+            'ZipStream\\' => 10,
             'ZBateson\\StreamDecorators\\' => 26,
             'ZBateson\\MbWrapper\\' => 19,
             'ZBateson\\MailMimeParser\\' => 24,
@@ -90,6 +94,8 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
             'Symfony\\Component\\ErrorHandler\\' => 31,
             'Symfony\\Component\\CssSelector\\' => 30,
             'Symfony\\Component\\Console\\' => 26,
+            'Staudenmeir\\EloquentHasManyDeep\\' => 32,
+            'Staudenmeir\\EloquentHasManyDeepContracts\\' => 41,
             'Spatie\\Ray\\' => 11,
             'Spatie\\Macroable\\' => 17,
             'Spatie\\LaravelRay\\' => 18,
@@ -106,11 +112,13 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
             'Psr\\SimpleCache\\' => 16,
             'Psr\\Log\\' => 8,
             'Psr\\Http\\Message\\' => 17,
+            'Psr\\Http\\Client\\' => 16,
             'Psr\\EventDispatcher\\' => 20,
             'Psr\\Container\\' => 14,
             'Psr\\Clock\\' => 10,
             'PhpParser\\' => 10,
             'PhpOption\\' => 10,
+            'PhpOffice\\PhpSpreadsheet\\' => 25,
         ),
         'O' => 
         array (
@@ -123,6 +131,8 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         array (
             'Monolog\\' => 8,
             'Mockery\\' => 8,
+            'Matrix\\' => 7,
+            'Maatwebsite\\Excel\\' => 18,
         ),
         'L' => 
         array (
@@ -137,7 +147,10 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         ),
         'I' => 
         array (
+            'Innoboxrr\\Traits\\' => 17,
+            'Innoboxrr\\SearchSurge\\' => 22,
             'Innoboxrr\\LaravelUploads\\' => 25,
+            'Innoboxrr\\LarapackGenerator\\' => 28,
             'Illuminate\\Support\\' => 19,
             'Illuminate\\' => 11,
         ),
@@ -168,6 +181,7 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         array (
             'Cron\\' => 5,
             'Composer\\Semver\\' => 16,
+            'Complex\\' => 8,
             'Carbon\\Doctrine\\' => 16,
             'Carbon\\' => 7,
         ),
@@ -181,6 +195,14 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         'voku\\' => 
         array (
             0 => __DIR__ . '/..' . '/voku/portable-ascii/src/voku',
+        ),
+        'Znck\\Eloquent\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/staudenmeir/belongs-to-through/src',
+        ),
+        'ZipStream\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/maennchen/zipstream-php/src',
         ),
         'ZBateson\\StreamDecorators\\' => 
         array (
@@ -326,6 +348,14 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         array (
             0 => __DIR__ . '/..' . '/symfony/console',
         ),
+        'Staudenmeir\\EloquentHasManyDeep\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/staudenmeir/eloquent-has-many-deep/src',
+        ),
+        'Staudenmeir\\EloquentHasManyDeepContracts\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/staudenmeir/eloquent-has-many-deep-contracts/src',
+        ),
         'Spatie\\Ray\\' => 
         array (
             0 => __DIR__ . '/..' . '/spatie/ray/src',
@@ -364,8 +394,12 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-message/src',
-            1 => __DIR__ . '/..' . '/psr/http-factory/src',
+            0 => __DIR__ . '/..' . '/psr/http-factory/src',
+            1 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
+        'Psr\\Http\\Client\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/http-client/src',
         ),
         'Psr\\EventDispatcher\\' => 
         array (
@@ -386,6 +420,10 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         'PhpOption\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpoption/phpoption/src/PhpOption',
+        ),
+        'PhpOffice\\PhpSpreadsheet\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/phpoffice/phpspreadsheet/src/PhpSpreadsheet',
         ),
         'Orchestra\\Workbench\\' => 
         array (
@@ -410,6 +448,14 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         'Mockery\\' => 
         array (
             0 => __DIR__ . '/..' . '/mockery/mockery/library/Mockery',
+        ),
+        'Matrix\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
+        ),
+        'Maatwebsite\\Excel\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/maatwebsite/excel/src',
         ),
         'League\\MimeTypeDetection\\' => 
         array (
@@ -443,9 +489,21 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         array (
             0 => __DIR__ . '/..' . '/laravel/prompts/src',
         ),
+        'Innoboxrr\\Traits\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/innoboxrr/traits/src',
+        ),
+        'Innoboxrr\\SearchSurge\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/innoboxrr/search-surge/src',
+        ),
         'Innoboxrr\\LaravelUploads\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
+        ),
+        'Innoboxrr\\LarapackGenerator\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/innoboxrr/larapack-generator/src',
         ),
         'Illuminate\\Support\\' => 
         array (
@@ -509,6 +567,10 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         array (
             0 => __DIR__ . '/..' . '/composer/semver/src',
         ),
+        'Complex\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/markbaker/complex/classes/src',
+        ),
         'Carbon\\Doctrine\\' => 
         array (
             0 => __DIR__ . '/..' . '/carbonphp/carbon-doctrine-types/src/Carbon/Doctrine',
@@ -529,6 +591,13 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
             'Pimple' => 
             array (
                 0 => __DIR__ . '/..' . '/pimple/pimple/src',
+            ),
+        ),
+        'H' => 
+        array (
+            'HTMLPurifier' => 
+            array (
+                0 => __DIR__ . '/..' . '/ezyang/htmlpurifier/library',
             ),
         ),
     );

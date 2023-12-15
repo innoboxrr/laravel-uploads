@@ -3,7 +3,8 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Innoboxrr\\LaravelUploads\\": "src/"
+            "Innoboxrr\\LaravelUploads\\": "src/",
+            "Innoboxrr\\LaravelUploads\\Database\\Factories\\": "database/factories/"
         }
     },
     "authors": [
@@ -14,5 +15,23 @@
     ],
     "require-dev": {
         "orchestra/testbench": "^8.17"
+    },
+    "require": {
+        "innoboxrr/larapack-generator": "^3.2"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Innoboxrr\\LaravelUploads\\Providers\\AppServiceProvider",
+                "Innoboxrr\\LaravelUploads\\Providers\\AuthServiceProvider",
+                "Innoboxrr\\LaravelUploads\\Providers\\EventServiceProvider",
+                "Innoboxrr\\LaravelUploads\\Providers\\RouteServiceProvider"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Innoboxrr\\LaravelUploads\\Tests\\": "tests/"
+        }
     }
 }
