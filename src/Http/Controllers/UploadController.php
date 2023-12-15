@@ -16,7 +16,7 @@ class UploadController extends Controller
         $this->middleware('auth:sanctum');
     }
 
-    public function upload(UploadRequest $request)
+    public function uploadFile(UploadRequest $request)
     {
         return $request->handle();   
     }

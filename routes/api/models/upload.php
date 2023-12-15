@@ -2,7 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::post('upload', 'UploadController@upload');
+Route::post('file', 'UploadController@uploadFile')
+	->name('file');
 
 Route::get('{upload_uuid}/display/{filename}', 'UploadController@display')
 	->name('display');
