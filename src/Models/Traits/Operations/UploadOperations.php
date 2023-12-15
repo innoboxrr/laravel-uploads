@@ -29,11 +29,4 @@ trait UploadOperations
         ];
     }
 
-    public function getUrl()
-    {
-
-        return Storage::disk($this->disk)->url($this->path);
-
-    }
-
 }

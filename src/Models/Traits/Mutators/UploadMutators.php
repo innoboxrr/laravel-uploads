@@ -8,7 +8,10 @@ trait UploadMutators
 	public function getUrlAttribute()
     {
 
-        return $this->getUrl();
+        return route('lu.upload.display', [
+            'upload_id' => $this->uuid,
+            'filename' => $this->filename,
+        ]);
 
     }
 
