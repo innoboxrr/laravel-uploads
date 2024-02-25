@@ -15,4 +15,15 @@ trait UploadMutators
 
     }
 
+    public function getUriAttribute()
+    {
+        $uri = route('lu.upload.display', [
+            'upload_uuid' => $this->uuid,
+            'filename' => $this->filename,
+        ], false);
+
+        return $uri;
+    }
+
+
 }

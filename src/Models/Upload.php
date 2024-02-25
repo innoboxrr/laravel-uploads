@@ -56,6 +56,7 @@ class Upload extends Model
 
     protected $appends = [
         'url',
+        'uri',
     ];
 
     protected $casts = [];
