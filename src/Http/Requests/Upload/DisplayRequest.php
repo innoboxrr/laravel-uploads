@@ -3,11 +3,9 @@
 namespace Innoboxrr\LaravelUploads\Http\Requests\Upload;
 
 use Innoboxrr\LaravelUploads\Models\Upload;
-use Innoboxrr\LaravelUploads\Http\Resources\Models\UploadResource;
-use Innoboxrr\LaravelUploads\Http\Events\Upload\Events\UpdateEvent;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DisplayRequest extends FormRequest
 {
@@ -53,21 +51,21 @@ class DisplayRequest extends FormRequest
 
     public function handle($upload_id, $filename)
     {
-
         $upload = Upload::where('uuid', $upload_id)->firstOrFail();
 
-        $path = $upload->path;
-
-        if (!Storage::disk($upload->disk)->exists($path)) {
+        if (!Storage::disk($upload->disk)->exists($upload->path)) {
             abort(404);
         }
 
-        $fileContents = Storage::disk($upload->disk)->get($path);
-        $mimeType = Storage::disk($upload->disk)->mimeType($path);
+        $mimeType = Storage::disk($upload->disk)->mimeType($upload->path);
+        $stream = Storage::disk($upload->disk)->readStream($upload->path);
 
-        return response($fileContents, 200)
-            ->header('Content-Type', $mimeType);
-
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+        }, 200, [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'max-age=26280000',
+        ]);
     }
 
 }

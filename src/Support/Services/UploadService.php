@@ -63,8 +63,16 @@ class UploadService
 
             $this->validate();
 
-            $path = Storage::disk($this->disk)->putFile($this->dir, $this->file, ['visibility' => $this->visibility]);
-
+            try {
+                $path = Storage::disk($this->disk)->putFile($this->dir, $this->file);
+                $this->setVisibility($path, $this->visibility);
+                if(!$path) {
+                    throw new \Exception("No se pudo subir el archivo.");
+                }
+            } catch (\Exception $e) {
+                throw $e;
+            }
+            
             return $path;
 
         } catch (\Exception $e) {
