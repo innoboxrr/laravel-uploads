@@ -62,7 +62,9 @@ class UploadRequest extends FormRequest
                 $file, 
                 $this->visibility ?? 'public', 
                 $this->user()->id, 
-                config('laravel-uploads.disk', 's3')
+                config('laravel-uploads.disk', 's3'),
+                $this->uploadable_type ?? null,
+                $this->uploadable_id ?? null,
             )
         );
 

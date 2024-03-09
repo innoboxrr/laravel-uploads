@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 trait UploadOperations
 {
 
-    public function buildCreatable($path, $file, $visibility = 'public', $userId =  null, $disk = 'local')
+    public function buildCreatable($path, $file, $visibility = 'public', $userId =  null, $disk = 'local', $uploadableType = null, $uploadableId = null)
     {
 
         if (!($file instanceof UploadedFile)) {
@@ -25,6 +25,8 @@ trait UploadOperations
             'path' => $path,
             'disk' => $disk,
             'visibility' => $visibility,
+            'uploadable_type' => $uploadableType,
+            'uploadable_id' => $uploadableId,
             'user_id' => $userId,
         ];
     }
