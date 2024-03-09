@@ -56,7 +56,15 @@ class UploadRequest extends FormRequest
 
         $upload = (new Upload);
 
-        $this->merge($upload->buildCreatable($filePath, $file, $this->visibility ?? 'public', $this->user()->id, config('laravel-uploads.disk', 's3')));
+        $this->merge(
+            $upload->buildCreatable(
+                $filePath, 
+                $file, 
+                $this->visibility ?? 'public', 
+                $this->user()->id, 
+                config('laravel-uploads.disk', 's3')
+            )
+        );
 
     }
 

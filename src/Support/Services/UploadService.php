@@ -24,7 +24,7 @@ class UploadService
 	protected $dir;
 
 
-	public function __construct($file, $params = [], $validations = [])
+	public function __construct($file = null, $params = [], $validations = [])
 	{
 		$this->disk = config('laravel-uploads.disk', 'local');
 
@@ -87,17 +87,26 @@ class UploadService
 
     public function getMimeType()
     {
-        return $this->file->getClientMimeType();
+        if($this->file) {
+            return $this->file->getClientMimeType();
+        }
+        return null;
     }
 
     public function getSize()
     {
-        return $this->file->getSize();
+        if($this->file) {
+            return $this->file->getSize();
+        }
+        return null;
     }
 
     public function getExtension()
     {
-        return $this->file->getClientOriginalExtension();
+        if($this->file) {
+            return $this->file->getClientOriginalExtension();
+        }
+        return null;
     }
 
     public function getUrl($path)
