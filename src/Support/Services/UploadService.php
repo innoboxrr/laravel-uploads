@@ -2,11 +2,13 @@
 
 namespace Innoboxrr\LaravelUploads\Support\Services;
 
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
+use Intervention\Image\ImageManagerStatic as Image;
 
 class UploadService 
 {
@@ -53,28 +55,61 @@ class UploadService
         }
     }
 
-	public function upload()
+	public function compressImage($imagePath)
+    {
+        // Comprueba si el archivo es una imagen basado en el tipo MIME
+        $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $mimeType = $this->getMimeType();
+        if (!in_array($mimeType, $allowedMimeTypes)) {
+            // No es una imagen, no se realiza la compresión
+            return $imagePath;
+        }
+
+        // Obtén la extensión del archivo
+        $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+
+        // Comprime y optimiza la imagen
+        $compressedImagePath = $imagePath . '_compressed.' . $extension;
+        $image = Image::make($imagePath);
+        $image->resize(config('laravel-uploads.compress_images_max_width'), null, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        });
+        $image->encode($extension, config('laravel-uploads.compress_images_quality'));
+        Storage::disk($this->disk)->put($compressedImagePath, $image->__toString());
+
+        return $compressedImagePath;
+    }
+
+    public function upload()
     {
         try {
-
-            if (!$this->file || !file_exists($this->file->getPathname())) {
+            if (!$this->file || !$this->file->isValid()) {
                 throw new \Exception("Archivo no válido o no encontrado.");
             }
 
             $this->validate();
 
-            try {
-                $path = Storage::disk($this->disk)->putFile($this->dir, $this->file);
-                $this->setVisibility($path, $this->visibility);
-                if(!$path) {
-                    throw new \Exception("No se pudo subir el archivo.");
-                }
-            } catch (\Exception $e) {
-                throw $e;
+            // Obtiene la ruta del archivo temporal
+            $tempFilePath = $this->file->getPathname();
+
+            // Comprime y optimiza la imagen si es una imagen
+            $compressedFilePath = $this->compressImage($tempFilePath);
+
+            // Sube el archivo comprimido o el original según el resultado de la compresión
+            $path = Storage::disk($this->disk)->putFile($this->dir, new File($compressedFilePath ?? $tempFilePath));
+            $this->setVisibility($path, $this->visibility);
+
+            // Borra el archivo comprimido temporal si se creó
+            if (isset($compressedFilePath)) {
+                Storage::disk($this->disk)->delete($compressedFilePath);
+            }
+
+            if (!$path) {
+                throw new \Exception("No se pudo subir el archivo.");
             }
             
             return $path;
-
         } catch (\Exception $e) {
             throw $e;
         }

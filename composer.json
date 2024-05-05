@@ -17,7 +17,8 @@
         "orchestra/testbench": "^8.17"
     },
     "require": {
-        "innoboxrr/larapack-generator": "^3.2|^4.0"
+        "innoboxrr/larapack-generator": "^3.2|^4.0",
+        "intervention/image": "^3.6"
     },
     "extra": {
         "laravel": {

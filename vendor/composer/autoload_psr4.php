@@ -81,6 +81,8 @@ return array(
     'Laravel\\Tinker\\' => array($vendorDir . '/laravel/tinker/src'),
     'Laravel\\SerializableClosure\\' => array($vendorDir . '/laravel/serializable-closure/src'),
     'Laravel\\Prompts\\' => array($vendorDir . '/laravel/prompts/src'),
+    'Intervention\\Image\\' => array($vendorDir . '/intervention/image/src'),
+    'Intervention\\Gif\\' => array($vendorDir . '/intervention/gif/src'),
     'Innoboxrr\\Traits\\' => array($vendorDir . '/innoboxrr/traits/src'),
     'Innoboxrr\\SearchSurge\\' => array($vendorDir . '/innoboxrr/search-surge/src'),
     'Innoboxrr\\LaravelUploads\\Tests\\' => array($baseDir . '/tests'),
