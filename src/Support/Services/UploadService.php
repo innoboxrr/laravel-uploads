@@ -55,27 +55,26 @@ class UploadService
         }
     }
 
-	public function compressImage($imagePath)
+	public function compressImage()
     {
-        // Comprueba si el archivo es una imagen basado en el tipo MIME
-        $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        $mimeType = $this->getMimeType();
-        if (!in_array($mimeType, $allowedMimeTypes)) {
-            // No es una imagen, no se realiza la compresión
-            return $imagePath;
+        if (!in_array($this->getMimeType(), ['image/jpeg', 'image/png', 'image/gif'])) {
+            return;
         }
 
-        // Obtén la extensión del archivo
-        $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+        if (!is_dir(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'));
+        }
 
-        // Comprime y optimiza la imagen
-        $compressedImagePath = $imagePath . '_compressed.' . $extension;
-        $image = Image::read($imagePath)
+        $filePath = storage_path('app/temp/' . $this->file->hashName());
+
+        Image::read($this->file)
             ->scaleDown(width: config('laravel-uploads.compress_images_max_width'))
-            ->encodeByExtension($extension, progressive: true, quality: config('laravel-uploads.compress_images_quality'));
-        Storage::disk($this->disk)->put($compressedImagePath, $image);
+            ->encodeByExtension($this->getExtension(), progressive: true, quality: config('laravel-uploads.compress_images_quality'))
+            ->save($filePath);
 
-        return $compressedImagePath;
+        $this->file = new File($filePath);
+
+        return $filePath;
     }
 
     public function upload()
@@ -87,19 +86,15 @@ class UploadService
 
             $this->validate();
 
-            // Obtiene la ruta del archivo temporal
-            $tempFilePath = $this->file->getPathname();
-
-            // Comprime y optimiza la imagen si es una imagen
-            $compressedFilePath = $this->compressImage($tempFilePath);
+            $tempFilepath = $this->compressImage();
 
             // Sube el archivo comprimido o el original según el resultado de la compresión
-            $path = Storage::disk($this->disk)->putFile($this->dir, new File($compressedFilePath ?? $tempFilePath));
+            $path = Storage::disk($this->disk)->putFile($this->dir, $this->file);
             $this->setVisibility($path, $this->visibility);
 
-            // Borra el archivo comprimido temporal si se creó
-            if (isset($compressedFilePath)) {
-                Storage::disk($this->disk)->delete($compressedFilePath);
+            // Elimina el archivo temporal si existe
+            if ($tempFilepath) {
+                unlink($tempFilepath);
             }
 
             if (!$path) {
