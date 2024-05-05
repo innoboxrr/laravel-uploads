@@ -151,6 +151,7 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         ),
         'I' => 
         array (
+            'Intervention\\Image\\Laravel\\' => 27,
             'Intervention\\Image\\' => 19,
             'Intervention\\Gif\\' => 17,
             'Innoboxrr\\Traits\\' => 17,
@@ -500,6 +501,10 @@ class ComposerStaticInit56d6061e56904baf906a7e27ed85aa3f
         'Laravel\\Prompts\\' => 
         array (
             0 => __DIR__ . '/..' . '/laravel/prompts/src',
+        ),
+        'Intervention\\Image\\Laravel\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/intervention/image-laravel/src',
         ),
         'Intervention\\Image\\' => 
         array (

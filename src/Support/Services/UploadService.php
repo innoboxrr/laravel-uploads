@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
-use Intervention\Image\ImageManagerStatic as Image;
+use Intervention\Image\Laravel\Facades\Image;
 
 class UploadService 
 {
@@ -70,13 +70,10 @@ class UploadService
 
         // Comprime y optimiza la imagen
         $compressedImagePath = $imagePath . '_compressed.' . $extension;
-        $image = Image::make($imagePath);
-        $image->resize(config('laravel-uploads.compress_images_max_width'), null, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        });
-        $image->encode($extension, config('laravel-uploads.compress_images_quality'));
-        Storage::disk($this->disk)->put($compressedImagePath, $image->__toString());
+        $image = Image::read($imagePath)
+            ->scaleDown(width: config('laravel-uploads.compress_images_max_width'))
+            ->encodeByExtension($extension, progressive: true, quality: config('laravel-uploads.compress_images_quality'));
+        Storage::disk($this->disk)->put($compressedImagePath, $image);
 
         return $compressedImagePath;
     }
