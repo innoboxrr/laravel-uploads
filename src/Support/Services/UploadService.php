@@ -32,7 +32,7 @@ class UploadService
 
 		$this->file = $file;
 
-		$this->dir = (config('app.env') == 'production') ? 'files' : 'test';
+		$this->dir = (config('app.env') == 'production') ? config('laravel-uploads.production_dir', 'files') : config('laravel-uploads.development_dir', 'test');
 
 		$this->visibility = Arr::get($params, 'visibility', 'public');
 

@@ -17,5 +17,9 @@ return [
 	'compress_images_quality' => 60,
 
 	'compress_images_max_width' => 1024,
+
+	'production_dir' => 'files',
+
+	'development_dir' => 'test',
 	
 ];
