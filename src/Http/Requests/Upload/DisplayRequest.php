@@ -60,16 +60,21 @@ class DisplayRequest extends FormRequest
             abort(404);
         }
 
-        $mimeType = Storage::disk($upload->disk)->mimeType($upload->path);
-        $stream = Storage::disk($upload->disk)->readStream($upload->path);
+        $disk = Storage::disk($upload->disk);
+        $mimeType = $disk->mimeType($upload->path);
+        $size = $disk->size($upload->path);
 
-        return response()->stream(function () use ($stream) {
+        return response()->stream(function () use ($disk, $upload) {
+            $stream = $disk->readStream($upload->path);
             fpassthru($stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
         }, 200, [
             'Content-Type' => $mimeType,
-            'Cache-Control' => 'max-age=26280000',
+            'Content-Length' => $size,
+            'Cache-Control' => 'public, max-age=2628000',
+            'Content-Disposition' => 'inline; filename="' . basename($upload->path) . '"'
         ]);
     }
-
-
 }
