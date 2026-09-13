@@ -21,9 +21,11 @@ class UploadController extends Controller
         return $request->handle();   
     }
 
-    public function display(DisplayRequest $request, $upload_id, $filename)
+    // El nombre en la URL es decorativo y opcional: sin default, Laravel
+    // descarta el parametro nulo y la llamada falla por falta de argumentos.
+    public function display(DisplayRequest $request, $upload_uuid, $filename = null)
     {
-        return $request->handle($upload_id, $filename);   
+        return $request->handle($upload_uuid, $filename);
     }
 
     public function delete(DeleteRequest $request)

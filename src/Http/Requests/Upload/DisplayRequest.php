@@ -6,7 +6,6 @@ use Innoboxrr\LaravelUploads\Models\Upload;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DisplayRequest extends FormRequest
 {
@@ -18,7 +17,7 @@ class DisplayRequest extends FormRequest
 
     public function authorize()
     {
-        
+
         return true;
 
     }
@@ -27,7 +26,6 @@ class DisplayRequest extends FormRequest
     {
         return [
             //
-            // 'upload_id' => 'required|numeric'
         ];
     }
 
@@ -50,22 +48,28 @@ class DisplayRequest extends FormRequest
         //
     }
 
-    public function handle($upload_id, $filename)
+    public function handle($upload_uuid, $filename = null)
     {
-        $upload = Cache::remember("uploads.{$upload_id}", 60, function () use ($upload_id) {
-            return Upload::where('uuid', $upload_id)->firstOrFail();
+        // Se cachean solo escalares. Laravel 13 publica la config de cache con
+        // serializable_classes => false: un modelo cacheado vuelve como
+        // __PHP_Incomplete_Class y la segunda visita respondia 500.
+        $location = Cache::remember(Upload::displayCacheKey($upload_uuid), 60, function () use ($upload_uuid) {
+            $upload = Upload::where('uuid', $upload_uuid)->firstOrFail();
+
+            return ['disk' => $upload->disk, 'path' => $upload->path];
         });
 
-        if (!Storage::disk($upload->disk)->exists($upload->path)) {
+        $disk = Storage::disk($location['disk']);
+
+        if (! $disk->exists($location['path'])) {
             abort(404);
         }
 
-        $disk = Storage::disk($upload->disk);
-        $mimeType = $disk->mimeType($upload->path);
-        $size = $disk->size($upload->path);
+        $mimeType = $disk->mimeType($location['path']);
+        $size = $disk->size($location['path']);
 
-        return response()->stream(function () use ($disk, $upload) {
-            $stream = $disk->readStream($upload->path);
+        return response()->stream(function () use ($disk, $location) {
+            $stream = $disk->readStream($location['path']);
             fpassthru($stream);
             if (is_resource($stream)) {
                 fclose($stream);
@@ -74,7 +78,7 @@ class DisplayRequest extends FormRequest
             'Content-Type' => $mimeType,
             'Content-Length' => $size,
             'Cache-Control' => 'public, max-age=2628000',
-            'Content-Disposition' => 'inline; filename="' . basename($upload->path) . '"'
+            'Content-Disposition' => 'inline; filename="' . basename($location['path']) . '"'
         ]);
     }
 }
