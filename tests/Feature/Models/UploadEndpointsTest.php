@@ -2,245 +2,265 @@
 
 namespace Innoboxrr\LaravelUploads\Tests\Feature\Models;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Innoboxrr\LaravelUploads\Tests\TestCase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Innoboxrr\LaravelUploads\Models\Upload;
+use Innoboxrr\LaravelUploads\Support\Services\UploadService;
+use Innoboxrr\LaravelUploads\Tests\FeatureTestCase;
+use Innoboxrr\LaravelUploads\Tests\Fixtures\PlainUser;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 
-class UploadEndpointsTest extends TestCase
+/**
+ * El flujo del avatar del admin: subir con la sesion de Sanctum, mostrar por
+ * la URL que devuelve la respuesta y administrar el registro.
+ */
+final class UploadEndpointsTest extends FeatureTestCase
 {
-
-    use RefreshDatabase,
-        WithFaker;
-
-    public function test_upload_policies_endpoint()
+    #[Test]
+    public function un_invitado_recibe_401(): void
     {
+        $this->postJson('/lu/upload/file', ['file' => UploadedFile::fake()->image('avatar.png')])
+            ->assertUnauthorized();
 
-        $upload = \Innoboxrr\LaravelUploads\Models\Upload::factory()->create();
-        
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
-
-        $payload = [
-            'id' => $upload->id
-        ];
-
-        $this->json('GET', '/api/innoboxrr/laraveluploads/upload/policies', $payload, $headers)
-            ->assertStatus(200);
-
+        $this->deleteJson('/lu/upload/delete', ['upload_id' => 1])->assertUnauthorized();
+        $this->postJson('/lu/upload/restore', ['upload_id' => 1])->assertUnauthorized();
+        $this->deleteJson('/lu/upload/force-delete', ['upload_id' => 1])->assertUnauthorized();
     }
 
-    public function test_upload_policy_endpoint()
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function disks(): array
     {
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
-
-        $payload = [
-            'policy' => 'index'
-        ];
-
-        $this->json('GET', '/api/innoboxrr/laraveluploads/upload/policy', $payload, $headers)
-            ->assertJsonStructure([
-                'index'
-            ])
-            ->assertStatus(200);
-
+        return ['public' => ['public'], 'local' => ['local']];
     }
 
-    public function test_upload_index_auth_endpoint()
+    #[Test]
+    #[DataProvider('disks')]
+    public function sube_una_imagen_y_la_muestra_con_y_sin_nombre(string $disk): void
     {
+        config(['laravel-uploads.disk' => $disk]);
 
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
+        $user = $this->makeUser();
+        $this->signIn($user);
 
-        $payload = [
-            'managed' => true
-        ];
+        $response = $this->post('/lu/upload/file', [
+            'file' => UploadedFile::fake()->image('avatar.png', 300, 300),
+        ], ['Accept' => 'application/json']);
 
-        $this->json('GET', '/api/innoboxrr/laraveluploads/upload/index', $payload, $headers)
-            ->assertStatus(200);
+        $response->assertCreated()
+            ->assertJsonStructure(['data' => ['id', 'uuid', 'filename', 'mime_type', 'size', 'path', 'disk', 'visibility', 'user_id', 'url', 'uri']])
+            ->assertJsonPath('data.filename', 'avatar.png')
+            ->assertJsonPath('data.disk', $disk)
+            ->assertJsonPath('data.visibility', 'public')
+            ->assertJsonPath('data.user_id', $user->id);
 
+        $upload = Upload::where('uuid', $response->json('data.uuid'))->firstOrFail();
+
+        Storage::disk($disk)->assertExists($upload->path);
+        $this->assertSame("/lu/upload/{$upload->uuid}/display/avatar.png", $response->json('data.uri'));
+
+        $stored = Storage::disk($disk)->get($upload->path);
+
+        $withName = $this->get($response->json('data.uri'));
+        $withName->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->assertSame($stored, $withName->streamedContent());
+
+        $withoutName = $this->get("/lu/upload/{$upload->uuid}/display");
+        $withoutName->assertOk();
+        $this->assertSame($stored, $withoutName->streamedContent());
     }
 
-    public function test_upload_index_guest_endpoint()
+    /**
+     * Laravel 13 publica cache.serializable_classes => false. Con un store que
+     * serializa, un modelo cacheado vuelve como __PHP_Incomplete_Class y la
+     * segunda visita a la misma imagen reventaba.
+     */
+    #[Test]
+    public function la_segunda_visita_funciona_con_la_cache_de_laravel_13(): void
     {
+        config([
+            'cache.default' => 'array',
+            'cache.stores.array.serialize' => true,
+            'cache.serializable_classes' => false,
+        ]);
+        Cache::purge('array');
 
-        $headers = [
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
+        $user = $this->makeUser();
+        $upload = $this->storedUpload($user);
 
-        $payload = [
-            'managed' => true
-        ];
-
-        $this->json('GET', '/api/innoboxrr/laraveluploads/upload/index', $payload, $headers)
-            ->assertStatus(401);
-            
+        $this->get("/lu/upload/{$upload->uuid}/display/{$upload->filename}")->assertOk();
+        $this->get("/lu/upload/{$upload->uuid}/display/{$upload->filename}")->assertOk();
     }
-    
-    public function test_upload_show_auth_endpoint()
+
+    #[Test]
+    public function la_visibilidad_privada_se_guarda(): void
     {
+        $this->signIn($this->makeUser());
 
-        $upload = \Innoboxrr\LaravelUploads\Models\Upload::latest()->first();
-
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
-
-        $payload = [
-            'upload_id' => $upload->id
-        ];
-
-        $this->json('GET', '/api/innoboxrr/laraveluploads/upload/show', $payload, $headers)
-            ->assertStatus(200);
-            
+        $this->post('/lu/upload/file', [
+            'file' => UploadedFile::fake()->create('contrato.pdf', 20, 'application/pdf'),
+            'visibility' => 'private',
+        ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonPath('data.visibility', 'private');
     }
 
-    public function test_upload_show_guest_endpoint()
+    #[Test]
+    public function sin_archivo_responde_422(): void
     {
+        $this->signIn($this->makeUser());
 
-        $upload = \Innoboxrr\LaravelUploads\Models\Upload::latest()->first();
+        $this->postJson('/lu/upload/file', [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('file');
 
-        $headers = [
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
-
-        $payload = [
-            'upload_id' => $upload->id
-        ];
-
-        $this->json('GET', '/api/innoboxrr/laraveluploads/upload/show', $payload, $headers)
-            ->assertStatus(401);
-            
+        $this->assertSame(0, Upload::count());
     }
 
-    public function test_upload_create_endpoint()
+    #[Test]
+    public function un_tipo_no_permitido_responde_422(): void
     {
+        $this->signIn($this->makeUser());
 
-        $user = \Innoboxrr\LaravelUploads\Models\User::first();
+        $this->post('/lu/upload/file', [
+            'file' => UploadedFile::fake()->create('paquete.zip', 10, 'application/zip'),
+        ], ['Accept' => 'application/json'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('file');
 
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
-
-        $payload = \Innoboxrr\LaravelUploads\Models\Upload::factory()->make()->getAttributes();
-
-        $this->json('POST', '/api/innoboxrr/laraveluploads/upload/create', $payload, $headers)
-            ->assertStatus(201);
-            
+        $this->assertSame(0, Upload::count());
+        $this->assertSame([], Storage::disk('public')->allFiles());
     }
 
-    public function test_upload_update_endpoint()
+    #[Test]
+    public function un_archivo_demasiado_grande_responde_422(): void
     {
+        config(['laravel-uploads.max_size' => 100]);
 
-        $upload = \Innoboxrr\LaravelUploads\Models\Upload::factory()->create();
+        $this->signIn($this->makeUser());
 
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
+        $this->post('/lu/upload/file', [
+            'file' => UploadedFile::fake()->create('grande.pdf', 101, 'application/pdf'),
+        ], ['Accept' => 'application/json'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('file');
 
-        $payload = [
-            ...\Innoboxrr\LaravelUploads\Models\Upload::factory()->make()->getAttributes(),
-            'upload_id' => $upload->id
-        ];
-
-        $this->json('PUT', '/api/innoboxrr/laraveluploads/upload/update', $payload, $headers)
-            ->assertStatus(200);
-            
+        $this->assertSame(0, Upload::count());
     }
 
-    public function test_upload_delete_endpoint()
+    #[Test]
+    public function una_visibilidad_desconocida_responde_422(): void
     {
+        $this->signIn($this->makeUser());
 
-        $upload = \Innoboxrr\LaravelUploads\Models\Upload::latest()->first();
-
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
-
-        $payload = [
-            'upload_id' => $upload->id
-        ];
-
-        $this->json('DELETE', '/api/innoboxrr/laraveluploads/upload/delete', $payload, $headers)
-            ->assertStatus(200);
-            
+        $this->post('/lu/upload/file', [
+            'file' => UploadedFile::fake()->image('avatar.png'),
+            'visibility' => 'everyone',
+        ], ['Accept' => 'application/json'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('visibility');
     }
 
-    public function test_upload_restore_endpoint()
+    #[Test]
+    public function el_duenio_borra_y_restaura_su_archivo(): void
     {
+        $owner = $this->makeUser();
+        $upload = $this->storedUpload($owner);
 
-        $upload = \Innoboxrr\LaravelUploads\Models\Upload::first();
+        $this->signIn($owner);
 
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
+        $this->deleteJson('/lu/upload/delete', ['upload_id' => $upload->id])->assertOk();
+        $this->assertSoftDeleted($upload);
+        $this->get("/lu/upload/{$upload->uuid}/display")->assertNotFound();
 
-        $payload = [
-            'upload_id' => $upload->id
-        ];
-
-        $this->json('POST', '/api/innoboxrr/laraveluploads/upload/restore', $payload, $headers)
-            ->assertStatus(200);
-            
+        $this->postJson('/lu/upload/restore', ['upload_id' => $upload->id])->assertOk();
+        $this->assertNotSoftDeleted($upload);
+        $this->get("/lu/upload/{$upload->uuid}/display")->assertOk();
     }
 
-    public function test_upload_force_delete_endpoint()
+    #[Test]
+    public function borrar_el_archivo_de_otro_responde_403(): void
     {
+        $upload = $this->storedUpload($this->makeUser());
 
-        $upload = \Innoboxrr\LaravelUploads\Models\Upload::latest()->first();
+        $this->signIn($this->makeUser());
 
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
-
-        $payload = [
-            'upload_id' => $upload->id
-        ];
-
-        $this->json('DELETE', '/api/innoboxrr/laraveluploads/upload/force-delete', $payload, $headers)
-            ->assertStatus(403);
-            
+        $this->deleteJson('/lu/upload/delete', ['upload_id' => $upload->id])->assertForbidden();
+        $this->postJson('/lu/upload/restore', ['upload_id' => $upload->id])->assertForbidden();
+        $this->assertNotSoftDeleted($upload);
     }
 
-    public function test_upload_export_endpoint()
-    {   
+    #[Test]
+    public function un_usuario_sin_is_admin_recibe_403_y_no_un_error(): void
+    {
+        $upload = $this->storedUpload($this->makeUser());
+        $stranger = $this->makeUser();
 
-        $headers = [
-            'Authorization' => config('test.token'),
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];  
+        $this->signIn(PlainUser::findOrFail($stranger->id));
 
-        $payload = [
-            //
-        ];
-
-        $this->json('POST', '/api/innoboxrr/laraveluploads/upload/export', $payload, $headers)
-            ->assertStatus(200);
-            
+        $this->deleteJson('/lu/upload/delete', ['upload_id' => $upload->id])->assertForbidden();
+        $this->deleteJson('/lu/upload/force-delete', ['upload_id' => $upload->id])->assertForbidden();
     }
 
+    #[Test]
+    public function un_admin_borra_cualquier_archivo(): void
+    {
+        $upload = $this->storedUpload($this->makeUser());
+
+        $this->signIn($this->makeUser(['is_admin' => true]));
+
+        $this->deleteJson('/lu/upload/delete', ['upload_id' => $upload->id])->assertOk();
+        $this->assertSoftDeleted($upload);
+
+        $this->postJson('/lu/upload/restore', ['upload_id' => $upload->id])->assertOk();
+        $this->assertNotSoftDeleted($upload);
+    }
+
+    #[Test]
+    public function el_borrado_definitivo_lo_decide_la_policy_y_quita_el_archivo(): void
+    {
+        $owner = $this->makeUser();
+        $upload = $this->storedUpload($owner);
+
+        $this->signIn($owner);
+        $this->deleteJson('/lu/upload/force-delete', ['upload_id' => $upload->id])->assertForbidden();
+        Storage::disk('public')->assertExists($upload->path);
+
+        $this->signIn($this->makeUser(['is_admin' => true]));
+        $this->deleteJson('/lu/upload/force-delete', ['upload_id' => $upload->id])->assertOk();
+
+        $this->assertModelMissing($upload);
+        Storage::disk('public')->assertMissing($upload->path);
+    }
+
+    #[Test]
+    public function get_file_info_usa_la_api_de_flysystem_3(): void
+    {
+        Storage::disk('public')->put('test/nota.txt', 'hola');
+
+        $info = (new UploadService())->getFileInfo('test/nota.txt');
+
+        $this->assertSame('test/nota.txt', $info['path']);
+        $this->assertSame(4, $info['size']);
+        $this->assertSame('text/plain', $info['mime_type']);
+        $this->assertIsInt($info['last_modified']);
+    }
+
+    private function storedUpload($user): Upload
+    {
+        Storage::disk('public')->put('test/archivo.txt', 'contenido');
+
+        return Upload::factory()->create([
+            'filename' => 'archivo.txt',
+            'mime_type' => 'text/plain',
+            'extension' => 'txt',
+            'size' => 9,
+            'path' => 'test/archivo.txt',
+            'disk' => 'public',
+            'user_id' => $user->id,
+        ]);
+    }
 }
