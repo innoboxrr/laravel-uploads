@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
-use Intervention\Image\Laravel\Facades\Image;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
+use Intervention\Image\ImageManager;
 
-class UploadService 
+class UploadService
 {
 
 	protected $disk;
@@ -57,17 +59,27 @@ class UploadService
 
 	public function compressImage()
     {
+        if (! config('laravel-uploads.compress_images', true)) {
+            return;
+        }
+
         if (!in_array($this->getMimeType(), ['image/jpeg', 'image/png', 'image/gif'])) {
             return;
         }
 
+        $manager = $this->imageManager();
+
+        if (! $manager) {
+            return;
+        }
+
         if (!is_dir(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'));
+            mkdir(storage_path('app/temp'), 0755, true);
         }
 
         $filePath = storage_path('app/temp/' . $this->file->hashName());
 
-        Image::read($this->file)
+        $manager->read($this->file)
             ->scaleDown(width: config('laravel-uploads.compress_images_max_width'))
             ->encodeByExtension($this->getExtension(), progressive: true, quality: config('laravel-uploads.compress_images_quality'))
             ->save($filePath);
@@ -75,6 +87,25 @@ class UploadService
         $this->file = new File($filePath);
 
         return $filePath;
+    }
+
+    /*
+     * Sin el facade Image: en Laravel 13 la clave `image` del contenedor es del
+     * componente de imagen del framework, que usa la API de Intervention 4 y
+     * pisa la de intervention/image-laravel. Con Intervention 3 cada subida de
+     * imagen respondia 500. Sin GD ni Imagick se sube el original.
+     */
+    protected function imageManager(): ?ImageManager
+    {
+        if (extension_loaded('gd')) {
+            return new ImageManager(new GdDriver());
+        }
+
+        if (extension_loaded('imagick')) {
+            return new ImageManager(new ImagickDriver());
+        }
+
+        return null;
     }
 
     public function upload()
@@ -100,14 +131,14 @@ class UploadService
             if (!$path) {
                 throw new \Exception("No se pudo subir el archivo.");
             }
-            
+
             return $path;
         } catch (\Exception $e) {
             throw $e;
         }
     }
 
-    public function getFile() 
+    public function getFile()
     {
     	return $this->file;
     }
@@ -165,9 +196,21 @@ class UploadService
 	    Storage::disk($this->disk)->delete($path);
 	}
 
+	/*
+	 * getMetadata() era de Flysystem 1 y no existe en Flysystem 3, el que
+	 * trae Laravel desde la 9. Se arma lo mismo con las llamadas actuales.
+	 */
 	public function getFileInfo($path)
 	{
-		return Storage::disk($this->disk)->getMetadata($path);
+		$disk = Storage::disk($this->disk);
+
+		return [
+			'path' => $path,
+			'size' => $disk->size($path),
+			'mime_type' => $disk->mimeType($path),
+			'last_modified' => $disk->lastModified($path),
+			'visibility' => $disk->getVisibility($path),
+		];
 	}
 
 }
