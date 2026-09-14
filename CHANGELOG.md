@@ -5,6 +5,29 @@ Todas las modificaciones notables a este proyecto serán documentadas en este ar
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 y este proyecto sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-09-13
+
+Lo que el paquete le hacía a la aplicación de Laravel 11+ que lo instala al
+arrancar.
+
+### Corregido
+
+- La aplicación cargaba sus `routes/web.php` y `api.php` una vez más por este
+  paquete: `RouteServiceProvider` heredaba del de Foundation, que vuelve a
+  ejecutar el cargador de `withRouting()`. Ahora hereda de
+  `Illuminate\Support\ServiceProvider` y registra las rutas en `boot()`, salvo
+  con las rutas cacheadas.
+- Cada usuario nuevo recibía repetido el correo de verificación:
+  `EventServiceProvider` heredaba del de Foundation, que agrega otro
+  `SendEmailVerificationNotification` para `Registered`.
+- `AuthServiceProvider` nunca registraba `UploadPolicy`: armaba mal el nombre
+  del modelo, y la policy solo se aplicaba por el adivinador de nombres de
+  Laravel. Ahora se registra con `Gate::policy()`.
+- Sin la carpeta `src/Http/Events`, el descubrimiento de eventos recorría la
+  raíz del disco en cada arranque.
+
+URIs, nombres de ruta, middleware y respuestas no cambian.
+
 ## [2.1.0] - 2026-09-13
 
 Lo que hacía falta para que el avatar del admin de una aplicación nueva de
