@@ -7,7 +7,10 @@ use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as AppEventServiceProvider;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as AppRouteServiceProvider;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Innoboxrr\LaravelUploads\Models\Upload;
+use Innoboxrr\LaravelUploads\Policies\UploadPolicy;
 use Innoboxrr\LaravelUploads\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -58,6 +61,14 @@ final class HostApplicationIsolationTest extends TestCase
             [SendEmailVerificationNotification::class],
             Event::getRawListeners()[Registered::class] ?? []
         );
+    }
+
+    #[Test]
+    public function la_policy_se_registra_sin_depender_del_adivinador_de_nombres(): void
+    {
+        // Laravel adivina Models\Upload => Policies\UploadPolicy, pero la
+        // aplicacion puede cambiar esa regla con Gate::guessPolicyNamesUsing().
+        $this->assertSame(UploadPolicy::class, Gate::policies()[Upload::class] ?? null);
     }
 
     #[Test]
