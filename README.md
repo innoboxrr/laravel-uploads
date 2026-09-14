@@ -8,9 +8,11 @@ File uploads scattered across a dozen tables is how you end up with orphaned obj
 
 ```bash
 composer require innoboxrr/laravel-uploads
-php artisan vendor:publish --tag=config   # optional: config/laravel-uploads.php
+php artisan vendor:publish --provider="Innoboxrr\LaravelUploads\Providers\AppServiceProvider" --tag=config   # optional: config/laravel-uploads.php
 php artisan migrate
 ```
+
+Pass the provider: a bare `--tag=config` publishes the config of every package that uses that tag. Full documentation of the ecosystem, in Spanish and English: <https://innoboxrr.github.io/docs/paquetes/laravel-uploads>.
 
 The host application is expected to provide:
 
